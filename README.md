@@ -1,11 +1,13 @@
 # Vigilante Core — Hosted Console
 
-**Live demo:** https://vigilante-core.github.io/
+**Live demo:** <https://vigilante-core.github.io/>
 
-This repository hosts the static analyst console for the Vigilante defensive SOC MVP. It opens in clearly marked demo mode with synthetic events. The Pages site does not run an API, store customer data, authenticate users, ingest telemetry, or execute response actions.
+The hosted console is a static frontend for Vigilante Core. The demo opens with synthetic events. Its “Preview sample brief” is illustrative only; it does not call an AI model or analyze real telemetry. The Pages site itself does not host an API, store customer data, authenticate users, ingest telemetry, or execute response actions.
 
-To use real alerts and cases, deploy the backend from [saadcyber21/vigilante-core](https://github.com/saadcyber21/vigilante-core) on infrastructure you control, expose its API through HTTPS, set its `CORS_ORIGINS` to `https://vigilante-core.github.io`, then use **Connect API** in the dashboard. Never commit credentials, API tokens, or webhook secrets here.
+The updated console offers an evidence-first investigation workflow. To generate a real brief, deploy the matching [AI-first backend](https://github.com/saadcyber21/vigilante-core), configure its optional AI provider on the API server, and connect the console to that API. AI use is analyst-triggered; the selected alert is sent to the configured provider, output is advisory, and response actions are not executed. Analyst feedback is saved as an evaluation signal and does not automatically train a model.
 
-The backend is a single-deployment MVP. Triage uses deterministic rules, not a trained AI model. Response proposals and approvals are records for human review only; no action is executed automatically. See the backend repository for setup, security, deployment, and scope documentation.
+For real alerts and cases, deploy the backend on infrastructure you control, expose its API through HTTPS, set `CORS_ORIGINS` to `https://vigilante-core.github.io`, then use **Connect API**. Never commit credentials, API tokens, or webhook secrets to this repository. Review provider privacy and retention terms before sending customer alert data.
 
-GitHub Actions publishes `docs/` to GitHub Pages when changes are merged to `main`.
+The backend remains a single-deployment MVP. Baseline triage uses deterministic rules, not a trained AI model. The product is not a multi-tenant SaaS service, enterprise SIEM replacement, or independently certified system. Human review is required.
+
+GitHub Actions publishes `docs/` to GitHub Pages when changes are pushed to `main`.
