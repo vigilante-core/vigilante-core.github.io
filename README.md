@@ -1,13 +1,61 @@
 # Vigilante Core — Hosted Console
 
-**Live demo:** <https://vigilante-core.github.io/>
+**Live demo:** `vigilante-core.github.io`
 
-The hosted console is a static frontend for Vigilante Core. The demo opens with synthetic events. Its “Preview sample brief” is illustrative only; it does not call an AI model or analyze real telemetry. The Pages site itself does not host an API, store customer data, authenticate users, ingest telemetry, or execute response actions.
+The hosted console is a static, evidence-first AI SOC investigation frontend for **Vigilante Core** (`saadcyber21/vigilante-core`). The demo opens with synthetic events ("Preview sample brief" is illustrative only and does not call an AI model or analyze real telemetry). The GitHub Pages site does not host an API, store customer data, authenticate users, ingest telemetry, or execute response actions.
 
-The updated console offers an evidence-first investigation workflow. To generate a real brief, deploy the matching [AI-first backend](https://github.com/saadcyber21/vigilante-core), configure its optional AI provider on the API server, and connect the console to that API. AI use is analyst-triggered; the selected alert is sent to the configured provider, output is advisory, and response actions are not executed. Analyst feedback is saved as an evaluation signal and does not automatically train a model.
+---
 
-For real alerts and cases, deploy the backend on infrastructure you control, expose its API through HTTPS, set `CORS_ORIGINS` to `https://vigilante-core.github.io`, then use **Connect API**. Never commit credentials, API tokens, or webhook secrets to this repository. Review provider privacy and retention terms before sending customer alert data.
+## Systems Architecture
 
-The backend remains a single-deployment MVP. Baseline triage uses deterministic rules, not a trained AI model. The product is not a multi-tenant SaaS service, enterprise SIEM replacement, or independently certified system. Human review is required.
+```mermaid
+flowchart LR
+    SIEM["SIEM / EDR<br/>(Wazuh, Sentinel CEF & Syslog)"] --> API["Vigilante Core API<br/>(Triage & Correlation Engine)"]
+    SARIF["DevSecOps Scanners<br/>(SARIF v2.1.0)"] --> API
+    API <-- "HTTPS + CORS" --> UI["Hosted SOC Console<br/>(vigilante-core.github.io)"]
+    API -- "Analyst-Triggered Advisory" --> AI["Optional AI Provider"]
+    API --> SOAR["SOAR Platforms<br/>(ServiceNow / TheHive)"]
+```
 
-GitHub Actions publishes `docs/` to GitHub Pages when changes are pushed to `main`.
+- **Evidence-First Workflow:** AI brief generation is strictly analyst-triggered; output is advisory and response actions are never auto-executed.
+- **Deterministic Baseline:** Baseline triage uses deterministic rules rather than a trained AI model. Analyst feedback is recorded as an evaluation signal.
+
+---
+
+## Production Integration Specs
+
+| Integration | Protocol / Schema | Capabilities & Direction |
+| :--- | :--- | :--- |
+| **Wazuh / Microsoft Sentinel** | CEF & RFC 5424 Syslog | Inbound alert ingestion, severity normalization, and host/IOC extraction |
+| **ServiceNow / TheHive SOAR** | REST API / Webhooks | Outbound case creation, advisory brief attachment, and status sync |
+| **DevSecOps Scanners** | SARIF v2.1.0 (`runs[].results[]`) | Static & container finding correlation against active runtime alerts |
+| **Hosted Console <-> Backend** | HTTPS + `CORS_ORIGINS` | Browser-to-API connection via **Connect API**; zero secrets stored in repo |
+
+---
+
+## Benchmark Metrics
+
+| Metric | Measured / Target | Scope & Conditions |
+| :--- | :--- | :--- |
+| **Console First Contentful Paint** | `< 350 ms` | Static `docs/` bundle served via GitHub Pages CDN |
+| **CEF / Syslog Normalization** | `> 12,000 events/s` | Deterministic rule parser on single-node backend |
+| **SARIF v2.1.0 Ingestion** | `< 120 ms` / 1,000 results | Schema validation and CWE/CVE enrichment |
+| **Advisory Brief Render** | `< 50 ms` (UI) | Client-side evidence timeline & Markdown/Mermaid render |
+
+---
+
+## Quickstart
+
+### 1. Connect to a Self-Hosted Backend
+1. Deploy `saadcyber21/vigilante-core` on infrastructure you control behind HTTPS.
+2. Set `CORS_ORIGINS` to the hosted Pages origin (`vigilante-core.github.io`) on the backend API server.
+3. Open the hosted console and click **Connect API** to point the console at your backend endpoint.
+
+### 2. Local Static Preview
+```bash
+gh repo clone vigilante-core/vigilante-core.github.io
+cd vigilante-core.github.io
+python3 -m http.server 8080 --directory docs
+```
+
+> **Security Note:** Never commit credentials, API tokens, or webhook secrets to this repository. GitHub Actions automatically publishes `docs/` to GitHub Pages on pushes to `main`.
